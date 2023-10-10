@@ -5,17 +5,14 @@ from app.models import User, Scores_Table
 # verify a user
 @bp.post('/verifyuser')
 def api_verify_user():
-    try:
-        content = request.json
-        thisUsername = content['username']
-        thisPassword = content['password']
-        thisUser = User.query.filter_by(username=thisUsername).first()
-        if thisUser and thisUser.check_password(thisPassword):
-            return jsonify({'userToken': thisUser.token}), 200
-        return jsonify({'error':'badCredentials'}), 401
-    except:
-        print("tlc message: if you're seeing this, the issue is my code")
-        return jsonify({'error':'customTlcError'}), 402
+    content = request.json
+    thisUsername = content['username']
+    thisPassword = content['password']
+    thisUser = User.query.filter_by(username=thisUsername).first()
+    if thisUser and thisUser.check_password(thisPassword):
+        return jsonify({'userToken': thisUser.token}), 200
+    return jsonify({'error':'badCredentials'}), 401
+
 
 # register a user
 @bp.post('/newuser')
