@@ -10,8 +10,8 @@ def api_verify_user():
     thisPassword = content['password']
     thisUser = User.query.filter_by(username=thisUsername).first()
     if thisUser and thisUser.check_password(thisPassword):
-        return jsonify({'userToken': thisUser.token}, status=200)
-    return jsonify({'error':'badCredentials'}, status=401)
+        return jsonify({'userToken': thisUser.token}), 200
+    return jsonify({'error':'badCredentials'}), 401
 
 # register a user
 @bp.post('/newuser')
@@ -22,15 +22,15 @@ def api_new_user():
     thisPassword = content['password']
     thisUserCheck = User.query.filter_by(username=thisUsername).first()
     if thisUserCheck:
-        return jsonify({'error':'duplicateUser'}, status=401)
+        return jsonify({'error':'duplicateUser'}), 401
     thisEmailCheck = User.query.filter_by(email=thisEmail).first()
     if thisEmailCheck:
-        return jsonify({'error':'duplicateEmail'}, status=401)
+        return jsonify({'error':'duplicateEmail'}), 401
     thisNewUser = User(email = thisEmail, username=thisUsername)
     thisNewUser.password = thisNewUser.hash_password(thisPassword)
     thisNewUser.add_token()
     thisNewUser.commit()
-    return jsonify({'message': "registerSuccess"}, status=200)
+    return jsonify({'message': "registerSuccess"}), 200
 
 # receive all game scores
 @bp.get('/scores')
