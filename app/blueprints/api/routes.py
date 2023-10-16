@@ -69,7 +69,7 @@ def log_newScore():
     # Front end will send only a token and a game score.
     thisContent = request.json
     thisToken = thisContent.get('token')
-    thisGameScore = int(thisContent.get('game_score'))
+    thisGameScore = float(thisContent.get('game_score'))
     # handle case in which anonymous score was logged. This is 
     # from a non-signed in user, and front end has sent as the token
     # the string "anonymous". Todd entered "anonymous" as a user in
