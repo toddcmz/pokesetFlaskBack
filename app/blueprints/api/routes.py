@@ -1,6 +1,7 @@
 from flask import request, jsonify
 from . import bp
 from app.models import User, Scores_Table
+from sqlalchemy import desc
 
 # verify a user
 @bp.post('/verifyuser')
@@ -36,28 +37,35 @@ def api_new_user():
 # receive all game scores
 @bp.get('/scores')
 def api_scores():
-  result = []
-  # add to this list all games in database
-  theseGames = Scores_Table.query.all() # .all() is returning all posts, where is post is a class
-  for eachGame in theseGames:
-    result.append({'game_id': eachGame.game_id,
-                   'game_score':eachGame.game_score,
-                   'game_date': eachGame.game_date,
-                   'username': eachGame.username})
-  return jsonify(result), 200 # this 200 is returning a "success" status
-
+  try:
+    result = []
+    # add to this list all games in database
+    theseGames = Scores_Table.query.order_by(Scores_Table.game_score.desc()).all() # .all() is returning all posts, where is post is a class
+    if len(theseGames) > 50:
+      theseGames = theseGames[0:49]
+    for eachGame in theseGames:
+      result.append({'game_id': eachGame.game_id,
+                    'game_score':eachGame.game_score,
+                    'username': eachGame.username})
+    return jsonify(result), 200 # this 200 is returning a "success" status
+  except:
+    return jsonify({"error": "couldNotGetScores"}), 402
+  
 # receive all scores from a single user
-@bp.get('/scores/<username>')
+@bp.post('/scores/<username>')
 def user_scores(username):
   thisUser = User.query.filter_by(username=username).first().user_id
   if thisUser: # if they give us a username we query for it, if there's no match then the username give was invalid
-    theseGames = Scores_Table.query.filter_by(user_id=thisUser)
+    theseGames = Scores_Table.query.filter_by(user_id=thisUser).order_by(Scores_Table.game_score.desc())
     result=[]
     for eachGame in theseGames:
       result.append({'game_id': eachGame.game_id,
-                     'game_score':eachGame.game_score,
-                     'game_date': eachGame.game_date,
+                     'game_score': eachGame.game_score,
                      'username': eachGame.username})
+    # in the event user exists but has no scores, return something
+    # typescript front end will still accept and we can alter on the front
+    if len(result) == 0:
+      result.append({'game_id':1, 'game_score': 0, 'username':"Games played:"})
     return jsonify(result), 200 # this 200 is returning a "success" status
   return jsonify({'error':"noSuchUser"}), 401
 
@@ -76,7 +84,7 @@ def log_newScore():
     # the user table, but is not hard coding the user ID in case
     # we reset that table in the future and create a new "anonymous"
     # user.
-    if thisToken == "anonmyous":
+    if thisToken == "anonymous":
       thisUserId = User.query.filter_by(username="anonymous").first().user_id
       thisUsername = "anonymous"
     else:
